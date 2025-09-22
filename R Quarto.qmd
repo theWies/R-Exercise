@@ -4,16 +4,18 @@ format: pdf
 editor: visual
 ---
 
-------------------------------------------------------------------------------
+------------------------------------------------------------------------
 
 ### Packages
+
 ```{r}
 library(mosaic)
 ```
 
-------------------------------------------------------------------------------
+------------------------------------------------------------------------
 
 ### Data
+
 ```{r}
 rm(list=ls())
 browseURL("http://www.principlesofeconometrics.com/poe5/data/def/motel.def")
@@ -22,32 +24,86 @@ load(url("http://www.principlesofeconometrics.com/poe5/data/rdata/motel.rdata"))
 head(motel)
 ```
 
-------------------------------------------------------------------------------
+------------------------------------------------------------------------
 
 ### Exercise
-Our hotel has 100 units. Repair period of 7 months of around 14 rooms. 
-Question: Did this affect occupancy rates and revenue.
-Quantify losses. 
 
-How much revenue did the motel lose due to construction?
-Consider economic theory about hotel demand, role of pricing and competition,
-and how to isolate the impact of the repairs from other market factors.
+Our hotel has 100 units. Repair period of 7 months of around 14 rooms. Question: Did this affect occupancy rates and revenue. Quantify losses.
 
-------------------------------------------------------------------------------
+How much revenue did the motel lose due to construction? Consider economic theory about hotel demand, role of pricing and competition, and how to isolate the impact of the repairs from other market factors.
+
+------------------------------------------------------------------------
 
 ### Assumption:
-- Occupancy rate is on the number of available rooms (100 and 86)
+
+-   Occupancy rate is on the number of available rooms (100 and 86)
+
+------------------------------------------------------------------------
+
+### Create variables for further usage
+
+1. Create total number of rooms depending on repair.
+2. Create occupied rooms from total number of rooms and occupancy.
+3. Create revenue from occupied rooms and motel price.
+4. Create relative occupancy between compatitors.
+
+```{r}
+# Total rooms
+motel$TRoom <- 100 - 14*motel$repair
+
+# Occupied rooms
+motel$OcRoom <- motel$TRoom * motel$motel_pct / 100
+
+# Revenue
+motel$Revenue <- motel$OcRoom * motel$motel_rate
+
+# Relative occupancy
+motel$RelOcc <- motel$motel_pct / motel$comp_pct
+
+# Renaming and changing for Usabilty
+names(motel)[names(motel) == "comp_pct"] <- "CompOcc"
+names(motel)[names(motel) == "motel_pct"] <- "MotelOcc"
+names(motel)[names(motel) == "comp_rate"] <- "MotelPrice"
+names(motel)[names(motel) == "motel_rate"] <- "CompPrice"
+names(motel)[names(motel) == "relprice"] <- "RelPrice"
+
+motel <- motel[, c("time", "days", "MotelPrice", "CompPrice",
+                 "RelPrice", "MotelOcc", "CompOcc", "RelOcc", "repair",
+                 "TRoom", "OcRoom", "Revenue"
+                 )]
+
+```
+
+------------------------------------------------------------------------
+
+### Analysis
+
+First baseline regression of 
+
+$$
+Revenue = \beta_0 + \beta_1 \cdot RelPrice + \beta_2 \cdot RelOcc + \beta_3 \cdot repair + \beta_4 \cdot TRoom
+$$
+
+```{r}
+# Baseline linear regression
+baseline_model <- lm(Revenue ~ MotelPrice + OcRoom + repair, data = motel)
+
+summary(baseline_model)
+```
 
 
-------------------------------------------------------------------------------
 
 
-### Create variable revenue with the occupied rooms and rate per room
 
-In times of no repair -> 100 rooms
-In times of repair    -> 86 (100 - 14)
-Revenue = Room rate * rooms
+------------------------------------------------------------------------
 
-------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
 
 
