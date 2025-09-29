@@ -9,6 +9,8 @@ editor: visual
 ### Packages
 
 ```{r}
+library(tidyverse)
+library(multcomp)
 library(mosaic)
 ```
 
@@ -78,17 +80,39 @@ motel <- motel[, c("time", "days", "MotelPrice", "CompPrice",
 
 ### Analysis
 
-First baseline regression of 
+1. Separate into before and after construction and show mean occupancy rate before and after repairs.
+
+```{r}
+motel_before <- motel %>% filter(repair==0)
+motel_after  <- motel %<% filter(repair==1)
+
+diffmean(MotelOcc ~ repair, data = motel)
+
+```
+
+2. First baseline regressions
 
 $$
-Revenue = \beta_0 + \beta_1 \cdot RelPrice + \beta_2 \cdot RelOcc + \beta_3 \cdot repair + \beta_4 \cdot TRoom
+Revenue = \beta_0 + \beta_1 \cdot repair + \varepsilon \\
+mean(Occupancy) = \beta_0 + \beta_1 \cdot repair + \varepsilon
 $$
 
 ```{r}
-# Baseline linear regression
-baseline_model <- lm(Revenue ~ MotelPrice + OcRoom + repair, data = motel)
+# Baseline linear regressions
+baseline_revenue_model   <- lm(Revenue ~ repair, data = motel)
+baseline_occupancy_model <- lm(MotelOcc ~ repair, data = motel)
 
-summary(baseline_model)
+# Show results of linear Regressions
+summary(baseline_revenue_model)
+summary(baseline_occupancy_model)
+
+# Show hypothesis testing H0 >= 0, vs H1 < 0 (left sided test)
+summary(glht(baseline_revenue_model,linfct = c("repair >= 0")))
+summary(glht(baseline_occupancy_model,linfct = c("repair >= 0")))
+
+# Critical values, when alpha = 5%
+qt(0.05, df= baseline_revenue_model$df.residual)
+qt(0.05, df= baseline_occupancy_model$df.residual)
 ```
 
 
@@ -96,6 +120,7 @@ summary(baseline_model)
 
 
 ------------------------------------------------------------------------
+
 
 
 
